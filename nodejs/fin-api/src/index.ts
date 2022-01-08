@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { Request, Response, NextFunction } from 'express'
 import { v4 as uuidv4 } from 'uuid'
 
 interface IAccount {
@@ -8,11 +8,29 @@ interface IAccount {
   statement: string[]
 }
 
-const customers: IAccount[] = []
-
 const app = express()
 
 app.use(express.json())
+
+const customers: IAccount[] = []
+
+function varyIfexistsAccountCPFMiddleware(
+  request: Request,
+  response: Response,
+  next: NextFunction
+) {
+  const { cpf } = request.headers
+
+  const customer = customers.find(customer => customer.cpf === cpf)
+
+  if (!customer) {
+    return response.status(400).json({ error: 'Customer not found' })
+  }
+
+  request.customer = customer
+
+  return next()
+}
 
 app.post('/account', (request, response) => {
   const { cpf, name } = request.body
@@ -35,13 +53,15 @@ app.post('/account', (request, response) => {
   return response.status(201).send()
 })
 
-app.get('/statement/:cpf', (request, response) => {
-  const {cpf} = request.params
+app.get(
+  '/statement',
+  varyIfexistsAccountCPFMiddleware,
+  (request, response) => {
+    const { customer } = request
 
-  const customer = customers.find(customer => customer.cpf === cpf)
-
-  return response.json(customer?.statement)
-}) 
+    return response.json(customer?.statement)
+  }
+)
 
 app.listen(3033, () => {
   console.log('Server linsten on port 3033')
