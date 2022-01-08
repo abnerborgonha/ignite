@@ -160,16 +160,30 @@ app.get('/account', varifyIfexistsAccountCPFMiddleware, (request, response) => {
   return response.json(customer)
 })
 
-app.delete('/account', varifyIfexistsAccountCPFMiddleware, (request, response) => {
+app.delete(
+  '/account',
+  varifyIfexistsAccountCPFMiddleware,
+  (request, response) => {
+    const { customer } = request
+
+    const removedCustomer: IAccount = customer
+
+    const modefyCustomers = customers.filter(
+      customer => !(customer === removedCustomer)
+    )
+
+    customers = modefyCustomers
+
+    return response.json(customers)
+  }
+)
+
+app.get('/balance', varifyIfexistsAccountCPFMiddleware, (request, response) => {
   const { customer } = request
 
-  const removedCustomer: IAccount = customer
+  const balance = getBalance(customer.statement)
 
-  const modefyCustomers = customers.filter(customer => !(customer === removedCustomer))
-
-  customers = modefyCustomers
-
-  return response.json(customers)
+  return response.json({ balance })
 })
 
 app.listen(3033, () => {
