@@ -120,10 +120,28 @@ app.post(
       amount,
       created_at: new Date()
     }
-    
+
     customer.statement.push(stamentOperation)
 
     return response.status(201).send()
+  }
+)
+
+app.get(
+  '/statement/date',
+  varifyIfexistsAccountCPFMiddleware,
+  (request, response) => {
+    const { customer } = request
+    const { date } = request.query
+
+    const dateFormat = new Date(date + ' 00:00')
+
+    const statement = customer.statement.filter(
+      statement =>
+        statement.created_at.toDateString() === dateFormat.toDateString()
+    )
+
+    return response.json(statement)
   }
 )
 
