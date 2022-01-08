@@ -1,5 +1,5 @@
 interface IStatament {
-  description: string
+  description?: string
   amount: number
   type: 'credit' | 'debit'
   created_at: Date
@@ -15,6 +15,6 @@ interface IAccount {
 
 declare namespace Express {
   export interface Request {
-     customer?: IAccount
+     customer: IAccount
   }
 }

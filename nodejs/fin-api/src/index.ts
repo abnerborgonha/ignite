@@ -1,8 +1,9 @@
+import { json } from 'body-parser'
 import express, { Request, Response, NextFunction, response } from 'express'
 import { v4 as uuidv4 } from 'uuid'
 
 interface IStatament {
-  description: string
+  description?: string
   amount: number
   type: 'credit' | 'debit'
   created_at: Date
@@ -15,14 +16,13 @@ interface IAccount {
   statement: IStatament[]
 }
 
-
 const app = express()
 
 app.use(express.json())
 
 const customers: IAccount[] = []
 
-function varyIfexistsAccountCPFMiddleware(
+function varifyIfexistsAccountCPFMiddleware(
   request: Request,
   response: Response,
   next: NextFunction
@@ -38,6 +38,18 @@ function varyIfexistsAccountCPFMiddleware(
   request.customer = customer
 
   return next()
+}
+
+function getBalance(statement: IStatament[]): number {
+  const balance = statement.reduce((accumulator, operation) => {
+    if (operation.type === 'credit') {
+      return accumulator + operation.amount
+    }
+
+    return accumulator - operation.amount
+  }, 0)
+
+  return balance
 }
 
 app.post('/account', (request, response) => {
@@ -61,27 +73,59 @@ app.post('/account', (request, response) => {
   return response.status(201).send()
 })
 
-app.get('/statement', varyIfexistsAccountCPFMiddleware, (request, response) => {
-  const { customer } = request
+app.get(
+  '/statement',
+  varifyIfexistsAccountCPFMiddleware,
+  (request, response) => {
+    const { customer } = request
 
-  return response.json(customer?.statement)
-})
-
-app.post('/deposit', varyIfexistsAccountCPFMiddleware, (request, response) => {
-  const { customer } = request
-  const {description, amount} = request.body
-
-  const stamentOperation: IStatament = {
-    type: 'credit',
-    amount,
-    description,
-    created_at: new Date()
+    return response.json(customer?.statement)
   }
+)
 
-  customer?.statement.push(stamentOperation)
+app.post(
+  '/deposit',
+  varifyIfexistsAccountCPFMiddleware,
+  (request, response) => {
+    const { customer } = request
+    const { description, amount } = request.body
 
-  return response.status(201).send()
-})
+    const stamentOperation: IStatament = {
+      type: 'credit',
+      amount,
+      description,
+      created_at: new Date()
+    }
+
+    customer?.statement.push(stamentOperation)
+
+    return response.status(201).send()
+  }
+)
+
+app.post(
+  '/withdraw',
+  varifyIfexistsAccountCPFMiddleware,
+  (request, response) => {
+    const { customer } = request
+    const { amount } = request.body
+
+    const balance = getBalance(customer.statement)
+
+    if (balance < amount)
+      return response.status(400).json({ error: 'Insufficient funds.' })
+
+    const stamentOperation: IStatament = {
+      type: 'debit',
+      amount,
+      created_at: new Date()
+    }
+    
+    customer.statement.push(stamentOperation)
+
+    return response.status(201).send()
+  }
+)
 
 app.listen(3033, () => {
   console.log('Server linsten on port 3033')
