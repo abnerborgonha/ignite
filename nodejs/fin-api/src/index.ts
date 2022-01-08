@@ -1,12 +1,20 @@
-import express, { Request, Response, NextFunction } from 'express'
+import express, { Request, Response, NextFunction, response } from 'express'
 import { v4 as uuidv4 } from 'uuid'
+
+interface IStatament {
+  description: string
+  amount: number
+  type: 'credit' | 'debit'
+  created_at: Date
+}
 
 interface IAccount {
   id: string
   cpf: string
   name: string
-  statement: string[]
+  statement: IStatament[]
 }
+
 
 const app = express()
 
@@ -53,15 +61,27 @@ app.post('/account', (request, response) => {
   return response.status(201).send()
 })
 
-app.get(
-  '/statement',
-  varyIfexistsAccountCPFMiddleware,
-  (request, response) => {
-    const { customer } = request
+app.get('/statement', varyIfexistsAccountCPFMiddleware, (request, response) => {
+  const { customer } = request
 
-    return response.json(customer?.statement)
+  return response.json(customer?.statement)
+})
+
+app.post('/deposit', varyIfexistsAccountCPFMiddleware, (request, response) => {
+  const { customer } = request
+  const {description, amount} = request.body
+
+  const stamentOperation: IStatament = {
+    type: 'credit',
+    amount,
+    description,
+    created_at: new Date()
   }
-)
+
+  customer?.statement.push(stamentOperation)
+
+  return response.status(201).send()
+})
 
 app.listen(3033, () => {
   console.log('Server linsten on port 3033')

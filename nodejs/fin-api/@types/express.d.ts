@@ -1,8 +1,16 @@
+interface IStatament {
+  description: string
+  amount: number
+  type: 'credit' | 'debit'
+  created_at: Date
+}
+
+
 interface IAccount {
   id: string
   cpf: string
   name: string
-  statement: string[]
+  statement: IStatament[]
 }
 
 declare namespace Express {
