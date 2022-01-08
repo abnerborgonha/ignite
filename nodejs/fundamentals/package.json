@@ -5,7 +5,7 @@
   "license": "MIT",
   "author": "Abner Borgonha <abnerborgonha@gmail.com>",
   "scripts": {
-    "start:dev": "tsnd --inspect --transpile-only --ignore-watch node_module src/server.ts"
+    "start:dev": "tsnd --inspect --transpile-only --ignore-watch node_module src/index.ts"
   },
   "dependencies": {
     "express": "^4.17.2"
