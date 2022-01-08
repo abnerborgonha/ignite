@@ -154,6 +154,12 @@ app.put('/account', varifyIfexistsAccountCPFMiddleware, (request, response) => {
   return response.status(201).send()
 })
 
+app.get('/account', varifyIfexistsAccountCPFMiddleware, (request, response) => {
+  const { customer } = request
+
+  return response.json(customer)
+})
+
 app.listen(3033, () => {
   console.log('Server linsten on port 3033')
 })
