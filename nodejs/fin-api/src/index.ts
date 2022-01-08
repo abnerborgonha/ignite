@@ -20,7 +20,7 @@ const app = express()
 
 app.use(express.json())
 
-const customers: IAccount[] = []
+let customers: IAccount[] = []
 
 function varifyIfexistsAccountCPFMiddleware(
   request: Request,
@@ -158,6 +158,18 @@ app.get('/account', varifyIfexistsAccountCPFMiddleware, (request, response) => {
   const { customer } = request
 
   return response.json(customer)
+})
+
+app.delete('/account', varifyIfexistsAccountCPFMiddleware, (request, response) => {
+  const { customer } = request
+
+  const removedCustomer: IAccount = customer
+
+  const modefyCustomers = customers.filter(customer => !(customer === removedCustomer))
+
+  customers = modefyCustomers
+
+  return response.json(customers)
 })
 
 app.listen(3033, () => {
